@@ -1,0 +1,21 @@
+{
+    "name": "vlinked/pay-ali-sdk",
+    "description": "支付宝支付官方sdk compposer版本",
+    "type": "library",
+    "authors": [
+        {
+            "name": "jrexe",
+            "email": "jrexejrexe@gmail.com"
+        }
+    ],
+    "autoload": {
+        "autoload": {
+            "psr-4": {
+                "VlinkedAliPay\\": "alipay/src"
+            }
+        }
+    },
+    "require": {
+        "ext-openssl": "*"
+    }
+}
