@@ -4,6 +4,7 @@
 namespace VlinkedAliPay\aop;
 
 
+use Exception;
 use VlinkedAliPay\exception\AliPayException;
 use VlinkedAliPay\LtLogger;
 use VlinkedAliPay\payload\AlipayBaseRequestInterface;
@@ -61,6 +62,14 @@ class AopClient
     public $encryptType = "AES";
 
     protected $alipaySdkVersion = "alipay-sdk-php-20161101";
+
+    /**
+     * AopClient constructor.
+     */
+    public function __construct()
+    {
+        date_default_timezone_set("Asia/Shanghai");
+    }
 
     public function generateSign($params, $signType = "RSA")
     {
@@ -125,6 +134,12 @@ class AopClient
     }
 
 
+    /**
+     * @param $url
+     * @param null $postFields
+     * @return bool|string
+     * @throws Exception
+     */
     protected function curl($url, $postFields = null)
     {
         $ch = curl_init();
@@ -382,7 +397,7 @@ class AopClient
      * @param $request AlipayBaseRequestInterface
      * @param null $authToken
      * @param null $appInfoAuthtoken
-     * @return bool|mixed|\SimpleXMLElement
+     * @return object
      * @throws AliPayException
      */
     public function execute($request, $authToken = null, $appInfoAuthtoken = null)
@@ -393,7 +408,6 @@ class AopClient
         //		//  如果两者编码不一致，会出现签名验签或者乱码
         if (strcasecmp($this->fileCharset, $this->postCharset)) {
 
-            // writeLog("本地文件字符集编码与表单提交编码不一致，请务必设置成一样，属性名分别为postCharset!");
             throw new AliPayException("文件编码：[" . $this->fileCharset . "] 与表单提交编码：[" . $this->postCharset . "]两者不一致!");
         }
 
@@ -465,13 +479,9 @@ class AopClient
 
 
         //发起HTTP请求
-        try {
-            $resp = $this->curl($requestUrl, $apiParams);
-        } catch (AliPayException $e) {
 
-            $this->logCommunicationError($sysParams["method"], $requestUrl, "HTTP_ERROR_" . $e->getCode(), $e->getMessage());
-            return false;
-        }
+        $resp = $this->curl($requestUrl, $apiParams);
+
 
         //解析AOP返回结果
         $respWellFormed = false;
@@ -482,7 +492,7 @@ class AopClient
 
 
         $signData = null;
-
+        // string to object
         if ("json" == $this->format) {
 
             $respObject = json_decode($r);
@@ -500,12 +510,15 @@ class AopClient
             }
         }
 
-
         //返回的HTTP文本不是标准JSON或者XML，记下错误日志
         if (false === $respWellFormed) {
-            $this->logCommunicationError($sysParams["method"], $requestUrl, "HTTP_RESPONSE_NOT_WELL_FORMED", $resp);
-            return false;
+//            $this->logCommunicationError($sysParams["method"], $requestUrl, "HTTP_RESPONSE_NOT_WELL_FORMED", $resp);
+            throw  new AliPayException("HTTP_RESPONSE_NOT_WELL_FORMED");
         }
+        if (empty($respObject)) {
+            throw  new AliPayException("响应对象为空");
+        }
+
 
         // 验签
         $this->checkResponseSign($request, $signData, $resp, $respObject);
@@ -637,6 +650,7 @@ class AopClient
      * @param $rsaPublicKeyFilePath
      * @param string $signType
      * @return bool
+     * @throws AliPayException
      */
     function verify($data, $sign, $rsaPublicKeyFilePath, $signType = 'RSA')
     {
@@ -644,6 +658,7 @@ class AopClient
         if ($this->checkEmpty($this->alipayPublicKey)) {
 
             $pubKey = $this->alipayrsaPublicKey;
+
             $res = "-----BEGIN PUBLIC KEY-----\n" .
                 wordwrap($pubKey, 64, "\n", true) .
                 "\n-----END PUBLIC KEY-----";
@@ -654,7 +669,9 @@ class AopClient
             $res = openssl_get_publickey($pubKey);
         }
 
-        ($res) or die('支付宝RSA公钥错误。请检查公钥文件格式是否正确');
+        if (empty($res)) {
+            throw  new AliPayException("支付宝RSA公钥错误。请检查公钥文件格式是否正确");
+        }
 
         //调用openssl内置方法验签，返回bool值
 
@@ -781,6 +798,14 @@ class AopClient
         return $slice;
     }
 
+
+    /**
+     * @param $request AlipayBaseRequestInterface
+     * @param $responseContent
+     * @param $respObject object
+     * @param $format
+     * @return null
+     */
     function parserResponseSubCode($request, $responseContent, $respObject, $format)
     {
 
@@ -797,7 +822,6 @@ class AopClient
                 // 内部节点对象
                 $rInnerObject = $respObject->$rootNodeName;
             } elseif ($errorIndex > 0) {
-
                 $rInnerObject = $respObject->$errorNodeName;
             } else {
                 return null;
@@ -823,6 +847,12 @@ class AopClient
 
     }
 
+    /**
+     * @param $request AlipayBaseRequestInterface
+     * @param $responseContent
+     * @param $responseJSON
+     * @return SignData
+     */
     function parserJSONSignData($request, $responseContent, $responseJSON)
     {
 
@@ -836,6 +866,11 @@ class AopClient
 
     }
 
+    /**
+     * @param $request AlipayBaseRequestInterface
+     * @param $responseContent
+     * @return false|string|null
+     */
     function parserJSONSignSource($request, $responseContent)
     {
 
@@ -882,6 +917,11 @@ class AopClient
         return $responseJSon->sign;
     }
 
+    /**
+     * @param $request AlipayBaseRequestInterface
+     * @param $responseContent
+     * @return SignData
+     */
     function parserXMLSignData($request, $responseContent)
     {
 
@@ -897,6 +937,11 @@ class AopClient
 
     }
 
+    /**
+     * @param $request AlipayBaseRequestInterface
+     * @param $responseContent
+     * @return false|string|null
+     */
     function parserXMLSignSource($request, $responseContent)
     {
 
@@ -970,12 +1015,12 @@ class AopClient
     }
 
     /**
-     * 验签
-     * @param $request
-     * @param $signData
-     * @param $resp
-     * @param $respObject
-     * @throws Exception
+     * 验签返回参数
+     * @param $request AlipayBaseRequestInterface
+     * @param $signData SignData
+     * @param $resp string 请求返回的原数据
+     * @param $respObject 请求返回的原数据对象
+     * @throws AliPayException
      */
     public function checkResponseSign($request, $signData, $resp, $respObject)
     {
@@ -985,7 +1030,7 @@ class AopClient
 
             if ($signData == null || $this->checkEmpty($signData->sign) || $this->checkEmpty($signData->signSourceData)) {
 
-                throw new Exception(" check sign Fail! The reason : signData is Empty");
+                throw new AliPayException(" check sign Fail! The reason : signData is Empty");
             }
 
 
@@ -993,11 +1038,10 @@ class AopClient
             $responseSubCode = $this->parserResponseSubCode($request, $resp, $respObject, $this->format);
 
 
-            if (!$this->checkEmpty($responseSubCode) || ($this->checkEmpty($responseSubCode) && !$this->checkEmpty($signData->sign))) {
+            if (!$this->checkEmpty($responseSubCode)
+                || ($this->checkEmpty($responseSubCode) && !$this->checkEmpty($signData->sign))) {
 
                 $checkResult = $this->verify($signData->signSourceData, $signData->sign, $this->alipayPublicKey, $this->signType);
-
-
                 if (!$checkResult) {
 
                     if (strpos($signData->signSourceData, "\\/") > 0) {
@@ -1007,12 +1051,11 @@ class AopClient
                         $checkResult = $this->verify($signData->signSourceData, $signData->sign, $this->alipayPublicKey, $this->signType);
 
                         if (!$checkResult) {
-                            throw new Exception("check sign Fail! [sign=" . $signData->sign . ", signSourceData=" . $signData->signSourceData . "]");
+                            throw new AliPayException("check sign Fail! [sign=" . $signData->sign . ", signSourceData=" . $signData->signSourceData . "]");
                         }
-
                     } else {
 
-                        throw new Exception("check sign Fail! [sign=" . $signData->sign . ", signSourceData=" . $signData->signSourceData . "]");
+                        throw new AliPayException("check sign Fail! [sign=" . $signData->sign . ", signSourceData=" . $signData->signSourceData . "]");
                     }
 
                 }
@@ -1046,7 +1089,11 @@ class AopClient
 
     }
 
-
+    /**
+     * @param $request AlipayBaseRequestInterface
+     * @param $responseContent string
+     * @return EncryptParseItem|null
+     */
     private function parserEncryptJSONSignSource($request, $responseContent)
     {
 
@@ -1101,6 +1148,11 @@ class AopClient
 
     // 获取加密内容
 
+    /**
+     * @param $request AlipayBaseRequestInterface
+     * @param $responseContent
+     * @return string
+     */
     private function encryptXMLSignSource($request, $responseContent)
     {
 
@@ -1114,6 +1166,11 @@ class AopClient
 
     }
 
+    /**
+     * @param $request AlipayBaseRequestInterface
+     * @param $responseContent
+     * @return EncryptParseItem|null
+     */
     private function parserEncryptXMLSignSource($request, $responseContent)
     {
 

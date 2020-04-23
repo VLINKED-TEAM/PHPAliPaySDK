@@ -1,21 +1,20 @@
 {
-    "name": "vlinked/pay-ali-sdk",
-    "description": "支付宝支付官方sdk compposer版本",
-    "type": "library",
-    "authors": [
-        {
-            "name": "jrexe",
-            "email": "jrexejrexe@gmail.com"
-        }
-    ],
-    "autoload": {
-        "autoload": {
-            "psr-4": {
-                "VlinkedAliPay\\": "alipay/src"
-            }
-        }
-    },
-    "require": {
-        "ext-openssl": "*"
+  "name": "vlinked/alipay-sdk",
+  "description": "支付宝官方sdk composer版本",
+  "type": "library",
+  "authors": [
+    {
+      "name": "jrexe",
+      "email": "jrexejrexe@gmail.com"
     }
+  ],
+  "autoload": {
+    "psr-4": {
+      "VlinkedAliPay\\": "alipay/src",
+      "Test\\": "eg"
+    }
+  },
+  "require": {
+    "ext-openssl": "*"
+  }
 }

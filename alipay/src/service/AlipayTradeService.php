@@ -96,12 +96,11 @@ class AlipayTradeService
     /**
      * alipay.trade.wap.pay
      * @param $builder AlipayTradeWapPayContentBuilder 业务参数，使用buildmodel中的对象生成。
-     * @param $return_url string 同步跳转地址，公网可访问
-     * @param $notify_url string 异步通知地址，公网可以访问
-     * @return  $response 支付宝返回的信息
+     * @param $aliPayCfg AliPayConfigInterFace
+     * @return bool|mixed|\SimpleXMLElement|string|\VlinkedAliPay\aop\提交表单HTML文本 $response 支付宝返回的信息
      * @throws AliPayException
      */
-    function wapPay($builder, $return_url, $notify_url)
+    function wapPay($builder, $aliPayCfg)
     {
 
         $biz_content = $builder->getBizContent();
@@ -110,8 +109,8 @@ class AlipayTradeService
 
         $request = new AlipayTradeWapPayRequest();
 
-        $request->setNotifyUrl($notify_url);
-        $request->setReturnUrl($return_url);
+        $request->setNotifyUrl($aliPayCfg->getNotifyUrl());
+        $request->setReturnUrl($aliPayCfg->getReturnUrl());
         $request->setBizContent($biz_content);
 
         // 首先调用支付api
@@ -129,7 +128,7 @@ class AlipayTradeService
     function aopclientRequestExecute($request, $ispage = false)
     {
 
-        $aop = new AopClient ();
+        $aop = new AopClient();
         $aop->gatewayUrl = $this->gateway_url;
         $aop->appId = $this->appid;
         $aop->rsaPrivateKey = $this->private_key;
@@ -148,29 +147,29 @@ class AlipayTradeService
         }
 
         //打开后，将报文写入log文件
-        $this->writeLog("response: " . var_export($result, true));
+//        $this->writeLog("response: " . var_export($result, true));
         return $result;
     }
 
     /**
      * alipay.trade.query (统一收单线下交易查询)
      * @param $builder AlipayTradeQueryContentBuilder 业务参数，使用buildmodel中的对象生成。
-     * @return $response 支付宝返回的信息
+     * @return bool|mixed|\SimpleXMLElement|string|\VlinkedAliPay\aop\提交表单HTML文本 $response 支付宝返回的信息
      * @throws AliPayException
      */
     function Query($builder)
     {
         $biz_content = $builder->getBizContent();
         //打印业务参数
-        $this->writeLog($biz_content);
+//        $this->writeLog($biz_content);
         $request = new AlipayTradeQueryRequest();
         $request->setBizContent($biz_content);
-
         // 首先调用支付api
         $response = $this->aopclientRequestExecute($request);
-        $response = $response->alipay_trade_query_response;
-        var_dump($response);
         return $response;
+        //
+//        $response = $response->alipay_trade_query_response;
+//        return $response;
     }
 
     /**
@@ -190,7 +189,6 @@ class AlipayTradeService
         // 首先调用支付api
         $response = $this->aopclientRequestExecute($request);
         $response = $response->alipay_trade_refund_response;
-        var_dump($response);
         return $response;
     }
 
@@ -211,7 +209,6 @@ class AlipayTradeService
         // 首先调用支付api
         $response = $this->aopclientRequestExecute($request);
         $response = $response->alipay_trade_close_response;
-        var_dump($response);
         return $response;
     }
 
@@ -231,7 +228,6 @@ class AlipayTradeService
 
         // 首先调用支付api
         $response = $this->aopclientRequestExecute($request);
-        var_dump($response);
         return $response;
     }
 
@@ -252,29 +248,37 @@ class AlipayTradeService
         // 首先调用支付api
         $response = $this->aopclientRequestExecute($request);
         $response = $response->alipay_data_dataservice_bill_downloadurl_query_response;
-        var_dump($response);
         return $response;
     }
 
     /**
-     * 验签方法
-     * @param $arr 验签支付宝返回的信息，使用支付宝公钥。
+     * 校验notify的url
+     * @param $arr array 验签支付宝返回的信息，使用支付宝公钥。
      * @return boolean
      */
-    function check($arr)
+    function checkV1($arr)
     {
         $aop = new AopClient();
         $aop->alipayrsaPublicKey = $this->alipay_public_key;
-        $result = $aop->rsaCheckV1($arr, $this->alipay_public_key, $this->signtype);
-        return $result;
+        return $aop->rsaCheckV1($arr, $this->alipay_public_key, $this->signtype);
+    }
+
+    /**
+     * 校验notify的url
+     * @param $arr array 验签支付宝返回的信息，使用支付宝公钥。
+     * @return boolean
+     */
+    function checkV2($arr)
+    {
+        $aop = new AopClient();
+        $aop->alipayrsaPublicKey = $this->alipay_public_key;
+        return $aop->rsaCheckV2($arr, $this->alipay_public_key, $this->signtype);
     }
 
     //请确保项目文件有可写权限，不然打印不了日志。
     function writeLog($text)
     {
-        // $text=iconv("GBK", "UTF-8//IGNORE", $text);
-        //$text = characet ( $text );
-        file_put_contents(dirname(__FILE__) . DIRECTORY_SEPARATOR . "./../../log.txt", date("Y-m-d H:i:s") . "  " . $text . "\r\n", FILE_APPEND);
+        file_put_contents("./log.txt", date("Y-m-d H:i:s") . "  " . $text . "\r\n", FILE_APPEND);
     }
 
 

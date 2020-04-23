@@ -11,7 +11,22 @@ abstract class AliPayConfigInterFace
 //    private $charset;
 //    private $sign_type;
 
+
     /**
+     * 异步通知地址
+     * @return mixed
+     */
+    abstract public function getNotifyUrl();
+
+    /**
+     * 页面支付后跳转地址
+     * @return mixed
+     */
+    abstract public function getReturnUrl();
+
+
+    /**
+     * 网关地址
      * @return mixed
      */
     public function getGatewayUrl()
@@ -21,24 +36,28 @@ abstract class AliPayConfigInterFace
 
 
     /**
+     * appid
      * @return mixed
      */
     abstract public function getAppId();
 
 
     /**
+     * 商户应用私钥
      * @return mixed
      */
     abstract public function getMerchantPrivateKey();
 
 
     /**
+     * 支付宝公钥
      * @return mixed
      */
     abstract public function getAlipayPublicKey();
 
 
     /**
+     * 字符编码
      * @return mixed
      */
     public function getCharset()
@@ -48,6 +67,8 @@ abstract class AliPayConfigInterFace
 
 
     /**
+     *
+     * 签名方式
      * @return mixed
      */
     public function getSignType()

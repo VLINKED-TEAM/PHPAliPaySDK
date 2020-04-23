@@ -27,12 +27,23 @@ class AlipayTradeWapPayContentBuilder
     // 如果该字段为空，则默认为与支付宝签约的商户的PID，也就是appid对应的PID
     private $sellerId;
 
-    // 产品标示码，固定值：QUICK_WAP_PAY
-    private $productCode;
 
+    private $pay_channels;
+
+    // 产品标示码，固定值：QUICK_WAP_PAY
+    private $productCode="QUICK_WAP_PAY";
+
+
+    /**
+     * @var array $bizContentarr 容器
+     */
     private $bizContentarr = array();
 
     private $bizContent = NULL;
+
+
+
+
 
     public function getBizContent()
     {
@@ -44,12 +55,7 @@ class AlipayTradeWapPayContentBuilder
 
     public function __construct()
     {
-        $this->bizContentarr['productCode'] = "QUICK_WAP_PAY";
-    }
-
-    public function AlipayTradeWapPayContentBuilder()
-    {
-        $this->__construct();
+        $this->bizContentarr['productCode'] = $this->productCode;
     }
 
     public function getBody()
@@ -117,4 +123,27 @@ class AlipayTradeWapPayContentBuilder
     {
         return $this->sellerId;
     }
+
+
+    /**
+     * @return mixed
+     */
+    public function getPayChannels()
+    {
+        return $this->pay_channels;
+    }
+
+    /**
+     * 可用渠道，用户只能在指定渠道范围内支付当有多个渠道时用“,”分隔注：与disable_pay_channels互斥
+     * @param array $pay_channels
+     */
+    public function setPayChannels($pay_channels)
+    {
+        $pay_channels_str = implode(",",$pay_channels);
+        $this->pay_channels = $pay_channels_str;
+        $this->bizContentarr['enable_pay_channels'] = $pay_channels_str;
+    }
+
+
+
 }
