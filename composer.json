@@ -2,6 +2,7 @@
   "name": "vlinked/alipay-sdk",
   "description": "支付宝官方sdk composer版本",
   "type": "library",
+   "license": "MIT",
   "authors": [
     {
       "name": "jrexe",
