@@ -2,15 +2,13 @@
 
 namespace VlinkedAliPay\config;
 
+
+/**@url https://openhome.alipay.com/platform/keyManage.htm 对应配置
+ * 支付宝应用配置信息
+ * @package VlinkedAliPay\config
+ */
 abstract class AliPayConfigInterFace
 {
-//    private $gatewayUrl;
-//    private $app_id;
-//    private $merchant_private_key;
-//    private $alipay_public_key;
-//    private $charset;
-//    private $sign_type;
-
 
     /**
      * 异步通知地址
@@ -36,21 +34,31 @@ abstract class AliPayConfigInterFace
 
 
     /**
-     * appid
+     * 应用AppId
+     * 查看地址 @url https://openhome.alipay.com/platform/keyManage.htm 对应APPID下的支付宝公钥。
      * @return mixed
      */
     abstract public function getAppId();
 
 
     /**
-     * 商户应用私钥
+     * 在生成签名的时候记录的 丢失无法找回
+     * 【应用私钥】
      * @return mixed
      */
     abstract public function getMerchantPrivateKey();
 
 
     /**
-     * 支付宝公钥
+     * 【应用公钥】
+     * @url https://openhome.alipay.com/platform/keyManage.htm 对应APPID下的商户应用公钥。
+     * @return mixed
+     */
+    abstract public function getMerchantPublicKey();
+
+    /**
+     * 【支付宝公钥】
+     * 查看地址 @url https://openhome.alipay.com/platform/keyManage.htm 对应APPID下的支付宝公钥。
      * @return mixed
      */
     abstract public function getAlipayPublicKey();

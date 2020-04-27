@@ -115,7 +115,6 @@ class AlipayTradeService
 
         // 首先调用支付api
         $response = $this->aopclientRequestExecute($request, true);
-        // $response = $response->alipay_trade_wap_pay_response;
         return $response;
     }
 
@@ -146,8 +145,6 @@ class AlipayTradeService
             $result = $aop->Execute($request);
         }
 
-        //打开后，将报文写入log文件
-//        $this->writeLog("response: " . var_export($result, true));
         return $result;
     }
 
@@ -167,9 +164,7 @@ class AlipayTradeService
         // 首先调用支付api
         $response = $this->aopclientRequestExecute($request);
         return $response;
-        //
-//        $response = $response->alipay_trade_query_response;
-//        return $response;
+
     }
 
     /**

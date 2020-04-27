@@ -1,3 +1,15 @@
+
+
+## 使用
+
+1. 第一步
+继承 AliPayConfigInterFace 配置应用信息
+
+2. 第二部
+实例化AlipayOauthService 或者 AlipayTradeService 服务
+
+
+
 一、免责申明：
 此DEMO仅供参考，实际开发中需要结合具体业务场景修改使用。
 

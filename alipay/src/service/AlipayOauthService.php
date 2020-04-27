@@ -11,6 +11,10 @@ use VlinkedAliPay\payload\AlipayBaseRequestInterface;
 use VlinkedAliPay\payload\AlipaySystemOauthTokenRequest;
 use VlinkedAliPay\payload\enums\AuthScopeEnums;
 
+/**
+ * 支付宝授权处理服务
+ * @package VlinkedAliPay\service
+ */
 class AlipayOauthService
 {
 
